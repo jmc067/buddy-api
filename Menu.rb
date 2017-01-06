@@ -4,17 +4,18 @@ require_relative './Database'
 class Menu
 	@@db ||= Database.new()
 
-	attr_accessor :store_id, :menu_items
+	attr_accessor :dispensary_id, :menu_items
 
 	def initialize(hash)
-		@store_id = "" 
+		@id = ""
+		@dispensary_id = "" 
 		@menu_items = []
 		self.update(hash)
 	end
 
 	def update(hash)
 		@id = hash["_id"].to_s if hash["_id"] 
-		@store_id = hash["store_id"] if hash["store_id"]
+		@dispensary_id = hash["dispensary_id"].to_s if hash["dispensary_id"]
 		@menu_items = hash["menu_items"] if hash["menu_items"]
 	end
 
@@ -32,7 +33,7 @@ class Menu
 
 	def format()
 		menu = {
-			"store_id"=>@store_id,
+			"dispensary_id"=>@dispensary_id,
 			"menu_items"=>@menu_items,
 		}
 		return menu

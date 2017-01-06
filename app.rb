@@ -82,3 +82,24 @@ get '/search/dispensary' do
 	dispensaries = db_result.map{ |d| Dispensary.new(d).format()}
 	return {"dispensaries"=>dispensaries}.to_json
 end
+
+# Update Menu
+
+	# Create Item
+	# Update Item
+	# Delete Item
+
+# Delete Menu
+
+# Search Menu
+get '/menu/:dispensary_id' do |dispensary_id|
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly    
+
+	# check store existence
+	db_result = @@db.find_one("menus",{"dispensary_id"=>dispensary_id})
+	error_not_found("Menu not found") if !db_result 
+
+    # format menu
+	menu = Menu.new(params)
+	menu.stringify
+end
