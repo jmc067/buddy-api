@@ -36,7 +36,7 @@ class Dispensary
 
 		# Create new menu
 		menu = Menu.new({"dispensary_id"=>dispensary_id})		
-		@@db.insert("dispensaries",self.format())
+		@@db.insert("menus",menu.format())
 	end
 
 	def overwrite()
@@ -48,6 +48,7 @@ class Dispensary
 
 	def delete()
 		@@db.delete("dispensaries",{"_id"=>BSON::ObjectId.from_string(@id)})
+		@@db.delete("menus",{"dispensary_id"=>@id.to_s})
 	end
 
 	def format()

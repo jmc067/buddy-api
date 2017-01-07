@@ -2,6 +2,7 @@ require 'sinatra'
 require 'json'
 require_relative './Dispensary'
 require_relative './Menu'
+require_relative './MenuItem'
 require_relative './Error'
 
 @@db ||= Database.new()
@@ -78,18 +79,79 @@ end
 # Search Dispensary
 get '/search/dispensary' do 
     headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+	
+	# search dispensaries    
 	db_result = @@db.get("dispensaries",{})
 	dispensaries = db_result.map{ |d| Dispensary.new(d).format()}
 	return {"dispensaries"=>dispensaries}.to_json
 end
 
-# Update Menu
+# Create Menu Item
+post '/menu/:dispensary_id' do |dispensary_id|	
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
 
-	# Create Item
-	# Update Item
-	# Delete Item
+	# find menu
+	db_result = @@db.find_one("menus",{"dispensary_id"=>dispensary_id})
+	error_not_found("Menu not found") if !db_result
 
-# Delete Menu
+	# format Menu
+	menu = Menu.new(db_result)
+
+	# format MenuItem
+	menu_item = MenuItem.new(params)
+
+	# add MenuItem
+	menu.menu_items.push(menu_item.format())
+
+	# overwrite menu
+	menu.overwrite
+	menu.stringify
+end
+
+# Update Menu Item
+post '/menu/:dispensary_id/:code' do |dispensary_id,code|
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+
+	# find menu
+	db_result = @@db.find_one("menus",{"dispensary_id"=>dispensary_id})
+	error_not_found("Menu not found") if !db_result
+
+	# format Menu
+	menu = Menu.new(db_result)
+
+	# format MenuItem
+	menu_item = MenuItem.new(params)
+
+	# remove MenuItem
+	menu.menu_items = menu.menu_items.select{|item| item["code"]!=code}
+
+	# overwrite menu
+	menu.menu_items.push(menu_item.format())
+	menu.overwrite
+	menu.stringify
+end
+
+# Delete Menu Item
+delete '/menu/:dispensary_id/:code' do |dispensary_id,code|
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+
+	# find menu
+	db_result = @@db.find_one("menus",{"dispensary_id"=>dispensary_id})
+	error_not_found("Menu not found") if !db_result
+
+	# format Menu
+	menu = Menu.new(db_result)
+
+	# format MenuItem
+	menu_item = MenuItem.new(params)
+
+	# remove MenuItem
+	menu.menu_items = menu.menu_items.select{|item| item["code"]!=code}
+
+	# overwrite menu
+	menu.overwrite
+	menu.stringify
+end
 
 # Search Menu
 get '/menu/:dispensary_id' do |dispensary_id|
@@ -100,6 +162,6 @@ get '/menu/:dispensary_id' do |dispensary_id|
 	error_not_found("Menu not found") if !db_result 
 
     # format menu
-	menu = Menu.new(params)
+	menu = Menu.new(db_result)
 	menu.stringify
 end
