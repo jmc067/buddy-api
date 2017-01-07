@@ -3,6 +3,7 @@ require 'json'
 require_relative './Dispensary'
 require_relative './Menu'
 require_relative './MenuItem'
+require_relative './User'
 require_relative './Error'
 
 @@db ||= Database.new()
@@ -12,6 +13,19 @@ get '/' do
 end
 
 # Register
+post '/register' do	
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+
+	# validate params
+	required_params = ["first_name","last_name","phone_number","type"]
+	required_params.each do |param| 
+		error_bad_request("Missing Field: #{param}") if !params[param] 
+	end
+
+	user = User.new(params)
+	user.save
+	user.stringify
+end
 
 # Login
 
