@@ -1,10 +1,12 @@
 require 'json'
+require 'bson'
+require 'bcrypt'
 require_relative './Database'
 
 class User
 	@@db ||= Database.new()
 
-	attr_accessor :phone_number, :type, :first_name, :last_name, :salted_password
+	attr_accessor :phone_number, :type, :first_name, :last_name, :salted_password, :session_id
 
 	def initialize(hash)
 		@phone_number = ""
@@ -21,6 +23,21 @@ class User
 		@first_name = hash["first_name"] if hash["first_name"] 
 		@last_name = hash["last_name"] if hash["last_name"] 
 		@salted_password = BCrypt::Password.create(hash["password"]) if hash["password"]
+		@salted_password = hash["salted_password"] if hash["salted_password"]
+	end
+
+	def login()
+		session = {
+			"phone_number"=>@phone_number,
+			"last_request"=>Time.now + (60 * 5) # expire in 5 hours
+		}
+		@@db.insert("sessions",session)
+		db_result = @@db.find_one("sessions",{"phone_number"=>@phone_number})
+		db_result["_id"].to_s
+	end
+
+	def generate_session_id()
+		return BSON::ObjectId.new.to_s 
 	end
 
 	def find(query={})
@@ -32,7 +49,10 @@ class User
 	end
 
 	def overwrite()
-		@@db.update("users",{"_id"=>BSON::ObjectId.from_string(@id)},self.format())
+		# do not overwrite _id
+		user = self.format()
+		user.delete("_id")
+		@@db.update("users",{"_id"=>BSON::ObjectId.from_string(@id)},user)
 	end
 
 	def format()

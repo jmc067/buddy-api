@@ -13,7 +13,7 @@ get '/' do
 end
 
 # Register
-post '/register' do	
+post '/user/register' do	
     headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
 
 	# validate params
@@ -22,12 +22,73 @@ post '/register' do
 		error_bad_request("Missing Field: #{param}") if !params[param] 
 	end
 
+	# check existence
+	db_result = @@db.find_one("users",{"phone_number"=>params["phone_number"]})
+	error_not_found("Phone number already registered") if db_result 
+
 	user = User.new(params)
 	user.save
 	user.stringify
 end
 
+# Update User
+post '/user/update/:id' do |id|
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+
+	# check existence
+	db_result = @@db.find_one("users",{"_id"=>BSON::ObjectId.from_string(id)})
+	error_not_found("User not found") if !db_result 
+
+    # format user
+	user = User.new(db_result)
+
+	# update user
+	user.update(params)
+
+	# check availability
+	db_result = @@db.find_one("users",{"phone_number"=>params["phone_number"]})
+	error_not_found("Phone number already registered") if db_result 
+
+	# overwrite user
+	user.overwrite
+	user.stringify
+end
+
+# Search Users
+get '/user/search' do 
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+	
+	# search users    
+	db_result = @@db.get("users",{})
+	users = db_result.map{ |d| User.new(d).format()}
+	return {"users"=>users}.to_json
+end
+
 # Login
+post '/user/login' do	
+    headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
+
+	# validate params
+	required_params = ["phone_number","password"]
+	required_params.each do |param| 
+		error_bad_request("Missing Field: #{param}") if !params[param] 
+	end
+
+	# check existence
+	db_result = @@db.find_one("users",{"phone_number"=>params["phone_number"]})
+	error_not_found("No accounts are registered with specified phone number") if !db_result 
+
+	# check password
+	puts db_result
+	user = User.new(db_result)
+	puts user
+	puts user.salted_password
+	correct_password = BCrypt::Password.new(user.salted_password)
+	error_unauthorized("Incorrect phone number or password") if correct_password != params["password"]      
+
+	session_id = user.login
+	session_id
+end
 
 # Create Dispensary
 post '/dispensary' do 
@@ -91,7 +152,7 @@ delete '/dispensary/:id' do |id|
 end
 
 # Search Dispensary
-get '/search/dispensary' do 
+get '/dispensary/search' do 
     headers({ "Access-Control-Allow-Origin" => "*"}) # cross-domain friendly
 	
 	# search dispensaries    
