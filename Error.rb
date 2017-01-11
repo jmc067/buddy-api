@@ -10,3 +10,8 @@ def error_unauthorized(msg="Unauthorized", referer="")
 	error 401, { "message" => msg }.to_json
 end
 
+def error_forbidden(msg="Forbidden", referer="")
+	error 403, { "message" => msg }.to_json
+end
+
+

@@ -4,12 +4,14 @@ require_relative './Database'
 class Dispensary
 	@@db ||= Database.new()
 
-	attr_accessor :name, :phone_number, :location
+	attr_accessor :name, :phone_number, :location, :driver_code, :admin_code
 
 	def initialize(hash)
 		@name = "" 
 		@phone_number = "" 
 		@location = "" 
+		@driver_code = BSON::ObjectId.new.to_s 
+		@admin_code = BSON::ObjectId.new.to_s 
 		self.update(hash)
 	end
 
@@ -18,6 +20,8 @@ class Dispensary
 		@name = hash["name"] if hash["name"]
 		@phone_number = hash["phone_number"] if hash["phone_number"]
 		@location = hash["location"] if hash["location"]
+		@driver_code = hash["driver_code"] if hash["driver_code"]
+		@admin_code = hash["admin_code"] if hash["admin_code"]
 	end
 
 	def find(query={})
@@ -55,14 +59,19 @@ class Dispensary
 		dispensary = {
 			"name"=>@name,
 			"phone_number"=>@phone_number,
-			"location"=>@location
+			"location"=>@location,
+			"driver_code"=>@driver_code,
+			"admin_code"=>@admin_code
 		}
 		dispensary["_id"] = @id if @id
 		return dispensary
 	end
 
 	def stringify()
-		return self.format().to_json
+		dispensary = self.format()
+		dispensary.delete("admin_code")
+		dispensary.delete("driver_code")
+		return dispensary.to_json
 	end
 
 end
