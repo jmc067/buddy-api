@@ -4,7 +4,7 @@ require_relative './Database'
 class MenuItem
 	@@db ||= Database.new()
 
-	attr_accessor :name, :code, :name, :category, :type, :thc_percent, :thc_g, :description, :image, :gram_price, :eighth_price, :quarter_price, :half_price, :oz_price
+	attr_accessor :name, :code, :name, :category, :type, :thc_percent, :thc_g, :description, :image, :gram_price, :eighth_price, :quarter_price, :half_price, :oz_price, :item_price
 
 	def initialize(hash)
 		@code = BSON::ObjectId.new.to_s
@@ -25,6 +25,7 @@ class MenuItem
 		@quarter_price = hash["quarter_price"].to_i if hash["quarter_price"]
 		@half_price = hash["half_price"].to_i if hash["half_price"]
 		@oz_price = hash["oz_price"].to_i if hash["oz_price"]
+		@item_price = hash["item_price"].to_i if hash["item_price"]
 	end
 
 	def format()
@@ -41,7 +42,8 @@ class MenuItem
 			"eighth_price" => @eighth_price,
 			"quarter_price" => @quarter_price,
 			"half_price" => @half_price,
-			"oz_price" => @oz_price
+			"oz_price" => @oz_price,
+			"item_price" => @item_price
 		}
 		return menu
 	end
